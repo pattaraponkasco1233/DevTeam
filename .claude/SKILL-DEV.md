@@ -110,20 +110,30 @@ Senior Angular Developer — เขียน code ตาม DR ที่ได�
 
 ## File Structure Convention
 
-### Component
+### New Master Page (BMS_WEB pattern)
+
+สร้าง folder ที่ `src/app/modules/transport/modules/[feature]/`
+
 ```
 [feature]/
-├── [feature].component.ts       # Logic
-├── [feature].component.html     # Template
-├── [feature].component.scss     # Styles
-├── [feature].module.ts          # NgModule (lazy)
-├── [feature]-routing.module.ts  # Routes
-├── [feature]-common.ts          # Constants/enums สำหรับ feature นี้
-├── form/                        # Sub-form component
-│   └── [feature]-form.component.*
-└── popup/                       # Modal/popup components
-    └── [popup-name].component.*
+├── [feature].component.ts
+├── [feature].component.html
+├── [feature].component.scss
+└── form/                            # ถ้ามี Modal form
+    ├── [feature]-form.component.ts
+    ├── [feature]-form.component.html
+    └── [feature]-form.component.scss
 ```
+
+**ต้อง config 3 ไฟล์นี้เสมอ:**
+```
+src/app/modules/transport/
+├── transport-common.ts          ← เพิ่ม route constant
+├── transport-routing.module.ts  ← เพิ่ม lazy route
+└── transport.module.ts          ← register ถ้าจำเป็น
+```
+
+> เมนูเพิ่มผ่าน **Database** — ไม่ใช่ FE task
 
 ### Model (src/app/models/)
 ```typescript

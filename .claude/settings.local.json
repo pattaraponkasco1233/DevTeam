@@ -5,7 +5,11 @@
       "Bash(git config *)",
       "Bash(gh auth *)",
       "Bash(rtk gh *)",
-      "Bash(rtk git *)"
+      "Bash(rtk git *)",
+      "Skill(update-config)"
+    ],
+    "additionalDirectories": [
+      "C:\\Work_Nook\\PEN_K\\BMS_WEB"
     ]
   }
 }

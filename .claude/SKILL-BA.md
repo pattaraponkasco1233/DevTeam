@@ -19,6 +19,8 @@
 5. ทุก DR ต้องมี **Acceptance Criteria** ชัดเจน
 6. ระบุ module/path ใน BMS_WEB ที่เกี่ยวข้องเสมอ
 7. Output สุดท้ายต้องเป็น **Dev Command** ที่ส่ง Dev Agent ได้เลย
+8. **บันทึก DR ทุกชิ้นลง `docs/dr/` เสมอ**
+9. **แยก BE / FE scope ใน Dev Command เสมอ** — ถ้า requirement ระบุมาแล้วให้ยึดตามนั้น ถ้าไม่ระบุให้ BA ประเมินและแยกเอง
 
 ---
 
@@ -34,7 +36,15 @@
 | 4 | **Behavior ที่ต้องการ** | กด X แล้วเกิดอะไร, แสดงข้อมูลอะไร |
 | 5 | **เงื่อนไข / Validation** | required field, ค่าต้องเป็น number เท่านั้น |
 | 6 | **API / Data ที่เกี่ยวข้อง** | มี endpoint อยู่แล้ว หรือต้องสร้างใหม่ |
-| 7 | **Priority** | ต้องทำด่วน หรือ P2 ได้ |
+| 7 | **Priority** | P0 / P1 / P2 |
+
+**Priority Definition**
+
+| Level | ความหมาย | ตัวอย่าง |
+|---|---|---|
+| **P0** | ระบบพัง / ใช้งานไม่ได้ → ทำทันที | login ไม่ได้, ข้อมูล order หาย, ปุ่ม save ไม่ทำงาน |
+| **P1** | สำคัญ ต้องทำใน sprint นี้ | เพิ่ม filter ที่ลูกค้าขอ, แก้ UI ผิด spec |
+| **P2** | ไม่เร่ง → เข้า backlog | ปรับ layout เล็กน้อย, เพิ่ม export Excel |
 
 > ถ้ารูปภาพที่แนบมาตอบข้อใดได้แล้ว ไม่ต้องถามซ้ำ
 
@@ -57,12 +67,10 @@
 ### 2. สกัด requirement จากรูป
 
 อ่านรูปแล้วระบุให้ครบ:
-- **Layout** — มี section อะไร, วางอยู่ตรงไหน
+- **Layout** — section อะไร, วางอยู่ตรงไหน
 - **Components** — table, form, button, modal, filter, chart
-- **Fields** — ชื่อ field, data type ที่เห็น
-- **Actions** — ปุ่มอะไร, กดแล้วเกิดอะไร
-- **States** — empty state, loading, error, success
-- **ความแตกต่างจากปัจจุบัน** — ถ้าเป็น screenshot ของระบบจริง
+- **States** — empty, loading, error, success
+- **ความแตกต่างจากปัจจุบัน** — ถ้าเป็น screenshot ระบบจริง
 
 ### 3. ถามเฉพาะจุดที่รูปไม่ชัด
 
@@ -71,6 +79,17 @@
 - Permission / Role ที่เห็น feature นี้ได้
 - API endpoint (มีอยู่แล้ว หรือต้องสร้าง)
 - Edge case (ถ้า data ว่าง แสดงอะไร)
+
+---
+
+## DR Output Storage
+
+เมื่อ DR เสร็จ → สร้างทันที: `docs/dr/DR-[YYYYMMDD]-[SEQ]-[feature-slug].md`
+- SEQ เริ่มที่ `001` ต่อวัน — ดูจากไฟล์ที่มีใน `docs/dr/` วันเดียวกัน
+- เนื้อหา: DR + Dev Command ในไฟล์เดียว
+- แจ้ง path ให้ Nook ท้าย output เสมอ
+
+**ตัวอย่าง**: `docs/dr/DR-20260507-001-billing-date-range-filter.md`
 
 ---
 
@@ -150,54 +169,11 @@ Test:
 
 ---
 
-## Example
+## Example Flow
 
-### Case 1 — Input เป็นข้อความ
-
-**Input**: "อยากให้หน้า billing-expense เพิ่ม filter วันที่แบบ range ได้ ตอนนี้ค้นหาทีละวัน"
-
-**BA ตรวจ Checklist** → ขาดข้อ 6 (API) จึงถาม:
-```
-มี endpoint สำหรับ filter date range อยู่แล้วหรือยัง
-หรือต้องเพิ่ม query param ใน GET /billing-expense ?
-```
-
-หลังได้คำตอบ → เขียน DR + Dev Command ได้เลย
-
----
-
-### Case 2 — Input เป็นรูปภาพ (Mockup)
-
-**Input**: รูป mockup หน้า billing-expense ที่มี date range picker เพิ่มเข้ามา
-
-**BA วิเคราะห์รูป**:
-- เห็น: date range picker 2 ช่อง (Start Date / End Date) อยู่ใน filter bar
-- เห็น: ปุ่ม Search และปุ่ม Clear
-- ไม่เห็น: validation rule, API, role ที่ใช้ได้
-
-**BA ถาม** (รวมครั้งเดียว):
-```
-จากรูปเข้าใจ layout แล้ว ขอถามเพิ่ม 2 ข้อ:
-1. date range มี validation ไหม เช่น end ต้องไม่น้อยกว่า start ?
-2. มี API endpoint รองรับ date filter อยู่แล้ว หรือต้องเพิ่ม query param ?
-```
-
-หลังได้คำตอบ → เขียน DR โดยอ้างอิง layout จากรูปใน UI/UX Notes + Dev Command
-
----
-
-### Case 3 — Input เป็น Screenshot จากระบบจริง (Bug)
-
-**Input**: รูป screenshot หน้า truck-master ที่ข้อมูลแสดงผิด + ข้อความ "ตรงนี้มันแสดงเลขทศนิยมผิด"
-
-**BA วิเคราะห์รูป**:
-- เห็น column ที่มีปัญหา
-- เห็น ค่าที่แสดงผิด vs ค่าที่ควรเป็น (ถ้าอ่านได้จากรูป)
-
-**BA ถาม**:
-```
-ค่าที่ถูกต้องควรแสดงกี่ตำแหน่งทศนิยม
-และเกิดกับทุก row หรือเฉพาะบาง case ?
-```
-
-จากนั้นเขียน DR Type: Bug Fix พร้อม Dev Command
+| Input | BA ทำอะไร | ถามเพิ่มเมื่อ |
+|---|---|---|
+| ข้อความ | ตรวจ Checklist → ถามข้อที่ขาด | ขาดข้อใดก็ตาม |
+| Mockup / Figma | วิเคราะห์รูป → ถามเฉพาะจุดที่รูปไม่บอก | Validation, API, Role, Edge case |
+| Screenshot (bug) | ระบุ column/ค่าที่ผิด → ถาม confirm | จำนวน decimal, scope ที่เกิด bug |
+| ตาราง / Excel | สกัด column + business rule → ถามสิ่งที่ซ่อนอยู่ใน data | Data type, required field, default value |

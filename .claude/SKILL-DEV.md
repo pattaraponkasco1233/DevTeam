@@ -6,7 +6,7 @@ Senior Angular Developer — เขียน code ตาม DR ที่ได�
 ## Project Context
 - **Framework**: Angular 17 (Standalone-ready, NgModule-based)
 - **UI**: NG-Zorro Antd 17 (primary), Angular Material 17 (secondary), PrimeNG 17
-- **HTTP**: RxJS 7, HttpClient, dual interceptor pattern (AppApiService / OtherApiService)
+- **HTTP**: RxJS 7, HttpClient — ใช้ `AppApiService` เท่านั้น
 - **i18n**: @ngx-translate (TH/EN)
 - **Charts**: ngx-echarts, ng2-charts, swimlane/ngx-charts
 - **Auth**: JWT + 2FA, auth-guard / login-guard
@@ -24,6 +24,7 @@ Senior Angular Developer — เขียน code ตาม DR ที่ได�
 6. **Token-safe** — ห้าม hardcode API URL หรือ secret ใด ๆ
 7. **ถามก่อนสันนิษฐาน** — DR ไม่ชัดตรงไหน ถามก่อนเสมอ ห้าม assume แล้ว code ผิดทิศ
 8. **Plan ก่อน code** — สรุป plan ให้ Nook อ่านและ confirm ก่อนลงมือจริงทุกครั้ง
+9. **เรียนรู้จาก error เสมอ** — เมื่อเจอ error ให้วิเคราะห์ root cause ก่อน แล้วปรับ approach ถ้า error เดิมเกิดซ้ำในครั้งต่อไปให้ถือว่า pattern นั้นผิด ห้ามลองซ้ำโดยไม่เปลี่ยนวิธี
 
 ---
 
@@ -33,14 +34,14 @@ Senior Angular Developer — เขียน code ตาม DR ที่ได�
 
 ก่อนอ่าน code ต้องมีข้อมูลต่อไปนี้ครบ ถ้าขาดข้อไหนให้ถามรวมครั้งเดียว:
 
-| # | ข้อมูลที่ต้องรู้ | ถ้าไม่รู้จะเกิดอะไร |
-|---|---|---|
-| 1 | Module / path ที่ต้องแก้ | code ผิด folder |
-| 2 | Action: Create / Modify / Fix | อาจสร้างซ้ำของที่มีอยู่ |
-| 3 | Component / file เป้าหมาย | แก้ผิด file |
-| 4 | Behavior ที่ต้องการ (input → output) | logic ผิดทิศ |
-| 5 | API endpoint + request/response shape | model ผิด |
-| 6 | Constraint หรือ Pattern ที่ต้องยึด | code ไม่ consistent |
+| # | ข้อมูลที่ต้องรู้ |
+|---|---|
+| 1 | Module / path ที่ต้องแก้ |
+| 2 | Action: Create / Modify / Fix |
+| 3 | Component / file เป้าหมาย |
+| 4 | Behavior ที่ต้องการ (input → output) |
+| 5 | API endpoint + request/response shape |
+| 6 | Constraint หรือ Pattern ที่ต้องยึด |
 
 รูปแบบการถาม (ถ้าขาด):
 ```
@@ -126,16 +127,10 @@ Senior Angular Developer — เขียน code ตาม DR ที่ได�
 
 ### Model (src/app/models/)
 ```typescript
-// app-[domain].model.ts
-export interface [Domain]Request {
-  // request fields
-}
-export interface [Domain]Response {
-  // response fields
-}
-export interface [Domain]Item {
-  // list item fields
-}
+// app-[domain].model.ts — แยก Request / Response / Item เสมอ
+export interface [Domain]Request { ... }
+export interface [Domain]Response { ... }
+export interface [Domain]Item { ... }
 ```
 
 ### Service Pattern
@@ -166,56 +161,32 @@ getData(params: RequestModel): Observable<ResponseModel> {
 
 ---
 
-## NG-Zorro Patterns
-
-```html
-<!-- Table -->
-<nz-table #table [nzData]="dataList" [nzLoading]="isLoading" nzBordered>
-  <thead>
-    <tr><th>Column</th></tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let row of table.data">
-      <td>{{ row.field }}</td>
-    </tr>
-  </tbody>
-</nz-table>
-
-<!-- Modal -->
-<nz-modal [(nzVisible)]="isVisible" nzTitle="Title" (nzOnOk)="handleOk()" (nzOnCancel)="handleCancel()">
-  <ng-container *nzModalContent><!-- content --></ng-container>
-</nz-modal>
-
-<!-- Form -->
-<form nz-form [formGroup]="form" (ngSubmit)="submit()">
-  <nz-form-item>
-    <nz-form-label nzRequired>Label</nz-form-label>
-    <nz-form-control nzErrorTip="Required">
-      <input nz-input formControlName="field" />
-    </nz-form-control>
-  </nz-form-item>
-</form>
-```
-
----
-
-## RxJS / Subscription Rules
+## State + Error Pattern
 
 ```typescript
-// MUST: unsubscribe pattern
-private destroy$ = new Subject<void>();
+// State variables — ใช้ naming นี้เสมอ
+isLoading = false;
+dataList: XxxItem[] = [];
+isEmpty = false;
 
-ngOnInit(): void {
-  this.service.getData()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(data => this.dataList = data);
-}
-
-ngOnDestroy(): void {
-  this.destroy$.next();
-  this.destroy$.complete();
+// HTTP call pattern
+loadData(): void {
+  this.isLoading = true;
+  this.api.get<XxxResponse>('/endpoint', params).pipe(
+    takeUntil(this.destroy$),
+    catchError(err => {
+      this.message.error(err?.error?.message ?? 'เกิดข้อผิดพลาด');
+      return EMPTY;
+    }),
+    finalize(() => this.isLoading = false)
+  ).subscribe(res => {
+    this.dataList = res.data ?? [];
+    this.isEmpty = this.dataList.length === 0;
+  });
 }
 ```
+
+> `message` คือ `NzMessageService` — inject ใน constructor, ชื่อ variable ยึดตาม convention ของ file นั้น
 
 ---
 
@@ -240,12 +211,22 @@ Key files: `src/assets/i18n/th.json`, `en.json`
 
 ---
 
+## Dev Commands
+
+| Action | Command |
+|---|---|
+| Run (dev) | `npm run start:dev` |
+| Build (dev) | `npm run deploy:dev` |
+
+---
+
 ## Output Checklist (ก่อน Done)
 - [ ] ผ่าน Pre-Work Step 1–3 แล้ว (ถาม DR + อ่าน code + Nook confirm plan)
 - [ ] ไม่มี `any` ที่ไม่มี comment
-- [ ] unsubscribe ทุก subscription
-- [ ] error handling ใน HTTP call
+- [ ] unsubscribe ทุก subscription ด้วย `takeUntil(destroy$)`
+- [ ] HTTP call มี `catchError` + `NzMessageService` + `finalize`
+- [ ] state ใช้ `isLoading` / `dataList` / `isEmpty` ตาม pattern
 - [ ] i18n key ถ้ามี user-facing text
 - [ ] ไม่ชน naming กับ component อื่นใน module
-- [ ] build ไม่มี TypeScript error
+- [ ] `npm run deploy:dev` ผ่านโดยไม่มี TypeScript error
 - [ ] ยึด pattern ของ module เดียวกัน (อ้างอิง file ที่อ่านมาจริง)

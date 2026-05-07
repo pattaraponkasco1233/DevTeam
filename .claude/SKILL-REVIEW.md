@@ -16,7 +16,9 @@ Senior Code Reviewer — ตรวจสอบ code ที่ Dev Agent เข�
 ### 1. Correctness
 - Logic ถูกต้องตาม DR / Acceptance Criteria
 - Edge case ครอบคลุม (empty, null, error state)
-- HTTP error handling มีครบ
+- HTTP call มี `catchError` + `finalize` ครบ
+- State ใช้ `isLoading` / `dataList` / `isEmpty` ตาม pattern
+- Error แสดงผ่าน `NzMessageService` ไม่ใช่ `console.error`
 
 ### 2. TypeScript Quality
 - ไม่มี `any` ที่ไม่มี comment
@@ -118,6 +120,9 @@ Senior Code Reviewer — ตรวจสอบ code ที่ Dev Agent เข�
 | hardcode text ภาษาไทยใน template | ไม่ผ่าน i18n | ใช้ `translate` pipe + key ใน i18n json |
 | import SharedModule แบบ circular | Build error | ตรวจ module hierarchy |
 | `console.log` หลงเหลือ | Production noise | ลบออกก่อน merge |
+| HTTP call ไม่มี `catchError` | Error เงียบ ไม่แจ้ง user | เพิ่ม `catchError` + `NzMessageService` |
+| HTTP call ไม่มี `finalize` | `isLoading` ค้างเป็น true | เพิ่ม `finalize(() => this.isLoading = false)` |
+| ใช้ชื่อ `loading` / `data` แทน | ไม่ตาม state pattern | เปลี่ยนเป็น `isLoading` / `dataList` / `isEmpty` |
 
 ---
 
@@ -125,5 +130,5 @@ Senior Code Reviewer — ตรวจสอบ code ที่ Dev Agent เข�
 Code ผ่าน review ได้เมื่อ:
 - ✅ ไม่มี BLOCKER
 - ✅ MAJOR แก้แล้วหรือมี justification
-- ✅ build ไม่มี TypeScript error
+- ✅ `npm run deploy:dev` ผ่านไม่มี TypeScript error
 - ✅ ไม่ break feature อื่น (check routing / shared module)

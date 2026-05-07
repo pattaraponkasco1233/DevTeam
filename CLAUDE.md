@@ -7,8 +7,13 @@ Stack: Angular 17 (FE) · .NET Core 8 (BE) · MSSQL
 
 ## Team
 
-PM · FE Dev · BE Dev (3–5 people)
-Read role-specific skills in `.claude/` before starting tasks.
+| Agent | Skill File | หน้าที่ |
+|---|---|---|
+| **BA** | `.claude/SKILL-BA.md` | รับ requirement → แปลเป็น DR + Dev Command |
+| **Dev** | `.claude/SKILL-DEV.md` | รับ DR → เขียน Angular code ตาม BMS_WEB pattern |
+| **Review** | `.claude/SKILL-REVIEW.md` | ตรวจ code → ให้ feedback พร้อม severity |
+
+**Reference**: `TECH-STACK.md` — Architecture และ Tech Stack ของ BMS_WEB
 
 ## Git Workflow
 
